@@ -7,10 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
-      engine_version:
-        description: "Blazium engine version (empty = latest nightly)"
+      blazium_ref:
+        description: "Blazium engine git ref (branch, tag, or SHA)"
         required: false
-        default: ""
+        default: "blazium-dev"
         type: string
 
 concurrency:
@@ -19,36 +19,44 @@ concurrency:
 
 jobs:
   autowork:
-    name: Download editor and run Autowork
+    name: Build editor and run Autowork
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 120
     steps:
       - name: Checkout test project
         uses: actions/checkout@v4
 
-      - name: Setup Blazium CLI
-        uses: blazium-games/setup-blazium-cli@v0.2.0
+      - name: Checkout Blazium engine
+        uses: actions/checkout@v4
+        with:
+          repository: blazium-games/blazium
+          ref: ${{ github.event.inputs.blazium_ref || 'blazium-dev' }}
+          path: blazium
+          submodules: recursive
 
-      - name: Verify Blazium CLI
-        shell: bash
-        run: blazium-cli --version
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      - name: Download and extract Blazium editor
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build editor with Luau + Autowork
+        working-directory: blazium
+        run: python -m SCons platform=windows target=editor module_autowork_enabled=yes -j2
+
+      - name: Export editor paths
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-          $versionArg = "${{ github.event.inputs.engine_version }}"
-          $exe = & pwsh -File tools/download_nightly_editor.ps1 `
-            -EngineVersion $versionArg `
-            -DownloadsDir (Join-Path $env:GITHUB_WORKSPACE "downloads") `
-            -EditorRoot (Join-Path $env:GITHUB_WORKSPACE "blazium_editor")
+          $exe = Resolve-Path "blazium/bin/blazium.windows.editor.x86_64.console.exe"
+          Write-Host "Using editor: $exe"
           "BLAZIUM_EXE=$exe" >> $env:GITHUB_ENV
           "TEST_PROJECT=$($env:GITHUB_WORKSPACE)" >> $env:GITHUB_ENV
 
       - name: Smoke check editor
         shell: pwsh
         run: |
-          Write-Host "Editor binary: $env:BLAZIUM_EXE"
           & $env:BLAZIUM_EXE --version
           if ($LASTEXITCODE -ne 0) {
             throw "Editor --version failed with exit code $LASTEXITCODE"
