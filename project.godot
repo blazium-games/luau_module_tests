@@ -13,10 +13,6 @@ config_version=5
 config/name="Luau Module Tests"
 config/features=PackedStringArray("4.3.2", "GL Compatibility")
 
-[autoload]
-
-LuauAutoload="*res://fixtures/autoload/LuauAutoload.luau"
-
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

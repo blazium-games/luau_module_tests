@@ -51,29 +51,34 @@ if ($env:AW_JUNIT) {
 Write-Host "[1/5] Generate .luauc fixture (if missing)..." -ForegroundColor Yellow
 $LuaucFixture = Join-Path $TestProject "fixtures\scripts\table_dsl\TableDslNode.luauc"
 if (-not (Test-Path $LuaucFixture)) {
-    & $BlaziumExe --headless --path $TestProject -s "res://tools/generate_luauc_fixture.gd"
+    & $BlaziumExe --headless --path $TestProject --script res://tools/generate_luauc_fixture.gd
     if ($LASTEXITCODE -ne 0) {
-        Write-Warning "Could not generate .luauc fixture"
+        Write-Error "Could not generate .luauc fixture (exit code $LASTEXITCODE)"
     }
 }
 
-Write-Host "[2/5] C++ unit tests (tests=yes build required separately)..." -ForegroundColor Yellow
+Write-Host "[2/5] C++ unit tests (tests=yes build)..." -ForegroundColor Yellow
 $TestsBinary = $BlaziumExe -replace "\.console\.exe$", ".tests.x86_64.exe"
 if ($TestsBinary -eq $BlaziumExe) {
     $TestsBinary = Join-Path (Split-Path $BlaziumExe -Parent) "blazium.windows.editor.tests.x86_64.exe"
 }
-if ($env:CI -eq "true") {
-    Write-Host "  Skipped in CI (CDN editor has no tests=yes binary)." -ForegroundColor DarkGray
-} elseif (Test-Path $TestsBinary) {
-    Write-Host "  Run: & `"$TestsBinary`" --test --test-filter=`"[LuauModule]`"" -ForegroundColor DarkGray
+$TestsConsole = $TestsBinary -replace "\.tests\.x86_64\.exe$", ".tests.x86_64.console.exe"
+if (Test-Path $TestsConsole) {
+    $TestsBinary = $TestsConsole
+}
+if (Test-Path $TestsBinary) {
+    & $TestsBinary --test --test-filter="[LuauModule]"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Luau module C++ tests failed with exit code $LASTEXITCODE"
+    }
 } else {
-    Write-Host "  Run: cd blazium; python -m SCons platform=windows tests=yes module_luau_module_enabled=yes -j8" -ForegroundColor DarkGray
+    Write-Warning "Tests binary not found ($TestsBinary); skipping C++ LuauModule filter"
 }
 
 Write-Host "[3/5] Autowork GDScript suite..." -ForegroundColor Yellow
 $prevEap = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
-& $BlaziumExe --headless --path $TestProject -s "res://run_tests.gd" @AwJunitArg 2>&1 | Out-Host
+& $BlaziumExe --headless --path $TestProject --script res://run_tests.gd @AwJunitArg 2>&1 | Out-Host
 $awExit = $LASTEXITCODE
 $ErrorActionPreference = $prevEap
 if ($awExit -ne 0) {
@@ -82,7 +87,7 @@ if ($awExit -ne 0) {
 
 Write-Host "[4/5] Autowork Luau discovery smoke..." -ForegroundColor Yellow
 $ErrorActionPreference = "Continue"
-& $BlaziumExe --headless --path $TestProject -s "res://run_tests.gd" --aw-file=res://tests/test_022_autowork_luau_discovery.gd 2>&1 | Out-Host
+& $BlaziumExe --headless --path $TestProject --script res://run_tests.gd --aw-file=res://tests/test_022_autowork_luau_discovery.gd 2>&1 | Out-Host
 $luauExit = $LASTEXITCODE
 $ErrorActionPreference = $prevEap
 if ($luauExit -ne 0) {

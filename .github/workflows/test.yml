@@ -47,12 +47,12 @@ jobs:
 
       - name: Build editor with Luau + Autowork
         working-directory: blazium
-        run: python -m SCons platform=windows target=editor module_autowork_enabled=yes -j2
+        run: python -m SCons platform=windows target=editor tests=yes module_autowork_enabled=yes -j2
 
       - name: Export editor paths
         shell: pwsh
         run: |
-          $exe = Resolve-Path "blazium/bin/blazium.windows.editor.x86_64.console.exe"
+          $exe = Resolve-Path "blazium/bin/blazium.windows.editor.tests.x86_64.console.exe"
           Write-Host "Using editor: $exe"
           "BLAZIUM_EXE=$exe" >> $env:GITHUB_ENV
           "TEST_PROJECT=$($env:GITHUB_WORKSPACE)" >> $env:GITHUB_ENV
