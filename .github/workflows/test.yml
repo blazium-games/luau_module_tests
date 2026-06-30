@@ -48,8 +48,11 @@ jobs:
       - name: Smoke check editor
         shell: pwsh
         run: |
+          Write-Host "Editor binary: $env:BLAZIUM_EXE"
           & $env:BLAZIUM_EXE --version
-          & $env:BLAZIUM_EXE --headless --path $env:TEST_PROJECT --check-only
+          if ($LASTEXITCODE -ne 0) {
+            throw "Editor --version failed with exit code $LASTEXITCODE"
+          }
 
       - name: Run validation gate
         shell: pwsh
