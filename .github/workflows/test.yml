@@ -10,7 +10,7 @@ on:
       blazium_ref:
         description: "Blazium engine git ref (branch, tag, or SHA)"
         required: false
-        default: "blazium-dev"
+        default: "fix/luau-global-class-filesystem-scan"
         type: string
 
 concurrency:
@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: blazium-games/blazium
-          ref: ${{ github.event.inputs.blazium_ref || 'blazium-dev' }}
+          ref: ${{ github.event.inputs.blazium_ref || 'fix/luau-global-class-filesystem-scan' }}
           path: blazium
           submodules: recursive
 
