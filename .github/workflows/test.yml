@@ -37,34 +37,12 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $downloads = Join-Path $env:GITHUB_WORKSPACE "downloads"
-          New-Item -ItemType Directory -Force -Path $downloads | Out-Null
-
           $versionArg = "${{ github.event.inputs.engine_version }}"
-          if ($versionArg) {
-            blazium-cli --download --editor --platform windows --arch x86_64 --get-version $versionArg --channel nightly $downloads
-          } else {
-            blazium-cli --download --editor --platform windows --arch x86_64 --latest-nightly --channel nightly $downloads
-          }
-
-          $zip = Get-ChildItem $downloads -Filter "*.zip" | Select-Object -First 1
-          if (-not $zip) {
-            Write-Error "No editor zip found in $downloads"
-          }
-
-          $editorRoot = Join-Path $env:GITHUB_WORKSPACE "blazium_editor"
-          Expand-Archive -Path $zip.FullName -DestinationPath $editorRoot -Force
-
-          $exe = Get-ChildItem $editorRoot -Recurse -Filter "blazium.windows.editor.x86_64.console.exe" | Select-Object -First 1
-          if (-not $exe) {
-            $exe = Get-ChildItem $editorRoot -Recurse -Filter "blazium.windows.editor.x86_64.exe" | Select-Object -First 1
-          }
-          if (-not $exe) {
-            Write-Error "No Blazium editor binary found under $editorRoot"
-          }
-
-          Write-Host "Using editor: $($exe.FullName)"
-          "BLAZIUM_EXE=$($exe.FullName)" >> $env:GITHUB_ENV
+          $exe = & pwsh -File tools/download_nightly_editor.ps1 `
+            -EngineVersion $versionArg `
+            -DownloadsDir (Join-Path $env:GITHUB_WORKSPACE "downloads") `
+            -EditorRoot (Join-Path $env:GITHUB_WORKSPACE "blazium_editor")
+          "BLAZIUM_EXE=$exe" >> $env:GITHUB_ENV
           "TEST_PROJECT=$($env:GITHUB_WORKSPACE)" >> $env:GITHUB_ENV
 
       - name: Smoke check editor
