@@ -59,15 +59,35 @@ if (-not (Test-Path $LuaucFixture)) {
 
 Write-Host "[2/5] C++ unit tests (tests=yes build)..." -ForegroundColor Yellow
 # tests=yes embeds doctest in the editor console binary (--test), not a separate exe.
+# Doctest ignores unknown flags; use --test-case / --test-case-exclude (not --test-filter).
+# GDScript runner paths are relative to the engine source root, so run --test from there.
 $TestsBinary = $BlaziumExe
+$EngineRoot = (Resolve-Path (Join-Path (Split-Path $BlaziumExe -Parent) "..")).Path
 $prevEap = $ErrorActionPreference
 if (Test-Path $TestsBinary) {
     $ErrorActionPreference = "Continue"
-    & $TestsBinary --test --test-filter="[Modules][LuauModule]" 2>&1 | Out-Host
+    Push-Location $EngineRoot
+    try {
+        $luauCaseCount = (& $TestsBinary --test --count --test-case='*[LuauModule]*' 2>&1 | Out-String)
+        if ($luauCaseCount -match 'unskipped test cases passing the current filters:\s*(\d+)') {
+            $luauTests = [int]$Matches[1]
+        } else {
+            $luauTests = 0
+        }
+
+        if ($luauTests -gt 0) {
+            Write-Host "  Running $luauTests LuauModule C++ test(s) from $EngineRoot" -ForegroundColor DarkGray
+            & $TestsBinary --test --test-case='*[LuauModule]*' 2>&1 | Out-Host
+        } else {
+            Write-Host "  No LuauModule C++ tests registered; skipping (rebuild engine with tests=yes)" -ForegroundColor DarkGray
+        }
+    } finally {
+        Pop-Location
+    }
     $cppExit = $LASTEXITCODE
     $ErrorActionPreference = $prevEap
     if ($cppExit -ne 0) {
-        Write-Warning "LuauModule C++ tests exited with code $cppExit (GDScript runner may fail without engine test data)"
+        Write-Warning "LuauModule C++ tests exited with code $cppExit"
     }
 } else {
     Write-Warning "Tests binary not found ($TestsBinary); skipping C++ LuauModule filter"
