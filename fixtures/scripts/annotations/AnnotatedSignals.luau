@@ -13,7 +13,7 @@ local AnnotatedSignals_C = gdclass(AnnotatedSignals)
 --- @signal value_changed
 
 function AnnotatedSignals:emit_pressed()
-	self.self:emit_signal("pressed")
+	self.emit_signal("pressed")
 end
 
 return AnnotatedSignals_C
