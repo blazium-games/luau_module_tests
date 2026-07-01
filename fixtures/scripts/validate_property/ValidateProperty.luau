@@ -7,10 +7,11 @@ local ValidatePropertyNode = {
 	tool = true,
 	score = 0,
 	_validate_property = function(self, property)
-		if property.name == "score" then
+		if tostring(property.name) == "score" then
 			property.hint = 1
 			property.hint_string = "0,100,1"
 		end
+		return property
 	end,
 }
 

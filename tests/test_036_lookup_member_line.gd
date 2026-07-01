@@ -11,5 +11,5 @@ func test_036_lookup_member_line() -> void:
 	var source := FileAccess.get_file_as_string(LOOKUP_PATH)
 	assert_false(source.is_empty(), "Lookup fixture source should exist")
 
-	var line := lang.find_function("get_speed", source)
+	var line: int = lang.find_function("get_speed", source)
 	assert_eq(line, 3, "find_function should return the member definition line")

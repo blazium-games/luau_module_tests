@@ -12,8 +12,7 @@ func test_041_public_constants() -> void:
 	assert_true(script != null, "RegisterConstant fixture should load")
 	script.reload()
 
-	var constants: Array = []
-	lang.get_public_constants(constants)
+	var constants: Array = lang.get_public_constants()
 
 	var found := false
 	for entry in constants:

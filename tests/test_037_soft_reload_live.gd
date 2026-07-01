@@ -7,7 +7,7 @@ func test_037_soft_reload_live() -> void:
 		pending("LuauScript not registered yet")
 		return
 
-	var script: Resource = ResourceLoader.load(SOFT_RELOAD_PATH)
+	var script: LuauScript = ResourceLoader.load(SOFT_RELOAD_PATH) as LuauScript
 	assert_true(script != null, "Soft reload fixture should load")
 
 	var node: Node = script.new() as Node
@@ -19,7 +19,7 @@ func test_037_soft_reload_live() -> void:
 		assert_eq(node.get("speed"), 9, "Property should be mutable before reload")
 
 	script.set_source_code(script.get_source_code().replace("return self.speed", "return self.speed + 1"))
-	var reload_err := script.reload(true)
+	var reload_err: Error = script.reload(true)
 	assert_eq(reload_err, OK, "Soft reload should succeed while instances are live")
 
 	if node.has_method("get_speed"):

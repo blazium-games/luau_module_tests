@@ -7,7 +7,7 @@ func test_022_autowork_luau_discovery() -> void:
 
 	var collector := AutoworkCollector.new()
 	collector.set_script_prefix("test_luau_")
-	collector.set_script_suffixes(PackedStringArray([".luau"]))
+	collector.set_script_suffix(".luau")
 	collector.set_include_subdirectories(false)
 	collector.process_directory("res://tests/luau")
 

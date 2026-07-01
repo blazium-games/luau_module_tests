@@ -13,7 +13,7 @@ func test_044_placeholder_tool() -> void:
 
 	var good_source := script.get_source_code()
 	script.set_source_code("this is not valid luau {{{")
-	var reload_err := script.reload(true)
+	var reload_err: Error = script.reload(true)
 	assert_ne(reload_err, OK, "Invalid reload should fail")
 	assert_true(script.is_placeholder_fallback_enabled(), "@tool script should enable placeholder fallback on failed reload")
 

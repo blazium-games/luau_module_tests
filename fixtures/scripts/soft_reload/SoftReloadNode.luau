@@ -3,7 +3,7 @@ local SoftReloadNode = {
 
 	speed = export { 5 },
 
-	function SoftReloadNode:get_speed()
+	get_speed = function(self)
 		return self.speed
 	end,
 }

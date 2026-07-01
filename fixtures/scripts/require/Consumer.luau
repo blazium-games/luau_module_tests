@@ -1,5 +1,9 @@
-local Helper = require("fixtures/scripts/require/HelperModule.mod")
-
-return {
-	combined = Helper.value .. "_loaded",
+local Consumer = {
+	extends = "RefCounted",
+	get_combined = function(self)
+		local Helper = require("res://fixtures/scripts/require/HelperModule.mod")
+		return Helper.value .. "_loaded"
+	end,
 }
+
+return Consumer
