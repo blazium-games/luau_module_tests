@@ -9,7 +9,6 @@ func test_027_super_call() -> void:
 		return
 	var node: Node = script.new() as Node
 	add_child_autofree(node)
-	if node.has_method("_ready"):
-		node.call("_ready")
-	if "label" in node:
-		assert_eq(node.get("label"), "ready_child", "super._ready should chain to base")
+	assert_true(node != null, "AnnotatedChild Luau node should instantiate")
+	node.notification(Node.NOTIFICATION_READY)
+	assert_eq(str(node.get("label")), "ready_child", "super._ready should chain to base")
